@@ -1,0 +1,39 @@
+
+setup
+	load settings (eeprom)
+	init audio
+	init imu
+	init motors
+	init commands
+
+loop
+	update audio
+	update imu
+	parse commands
+	update motors
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+update motors
+	xAngle, driveSpeed, turnAmount, neckAngle, neckLean, headTurn, headTilt
+	
+	driveAngleOffset = driveAngleFactor * xAngle;
+	neckAngleOffset = neckAngleFactor * xAngle;
+	
+	turnAmountFactor = turnAmount / 2;
+	
+	driveMotorL = driveAngleOffset + driveSpeed + turnAmountFactor
+	driveMotorR = driveAngleOffset + driveSpeed - turnAmountFactor
+	
+	neckMotorAngle = neckAngleOffset + neckAngle
+	neckMotorLean = neckLean
+	
+	headTurnMotor = headTurn
+	headTiltMotor = headTilt
