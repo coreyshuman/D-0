@@ -4,7 +4,7 @@
 
 class Util {
     public:
-        static uint16_t CalculateCrc(uint8_t *data, uint32_t len);
+        static uint16_t calculateCrc(uint8_t *data, uint32_t len);
 
     private:
 };

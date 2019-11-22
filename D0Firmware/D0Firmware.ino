@@ -4,6 +4,7 @@
 // Arduino-specific API functions, module Initializations, and main loop code goes here.
 
 #include <Arduino.h>
+#include "includes/Config.h"
 #include "includes/Audio.h"
 #include "includes/CommandController.h"
 #include "includes/IMU.h"
@@ -11,7 +12,6 @@
 #include "includes/SerialProcessor.h"
 #include "includes/Settings.h"
 
-#define LED_PIN 13 // (Arduino is 13, Teensy is 11, Teensy++ is 6)
 
 Audio audio;
 CommandController controller;
@@ -25,6 +25,14 @@ Settings settings;
 // ================================================================
 
 void setup() {
+    // join I2C bus (I2Cdev library doesn't do this automatically)
+    #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
+        Wire.begin();
+        TWBR = 24; // 400kHz I2C clock (200kHz if CPU is 8MHz)
+    #elif I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_FASTWIRE
+        Fastwire::setup(400, true);
+    #endif
+    
     // initialize serial communication
     Serial.begin(115200);
     Serial.println(F("D-0 Firmware Initializing..."));
@@ -34,9 +42,9 @@ void setup() {
 
     settings.setup();
     audio.setup();
-    imu.setup();
+    imu.setup(settings->imuOffsets);
     motors.setup();
-    controller.setup();
+    controller.setup(settings, imu);
 }
 
 

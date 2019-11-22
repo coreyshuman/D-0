@@ -11,7 +11,7 @@ static const uint16_t crc_table[16] =
 };
 
 /********************************************************************
-* Function: 	CalculateCrc()
+* Function: 	calculateCrc()
 *
 * Precondition: 
 *
@@ -26,7 +26,7 @@ static const uint16_t crc_table[16] =
 *			
 * Note:		 	None.
 ********************************************************************/	
-uint16_t Util::CalculateCrc(uint8_t *data, uint32_t len)
+uint16_t Util::calculateCrc(uint8_t *data, uint32_t len)
 {
     uint32_t i;
     uint16_t crc = 0;

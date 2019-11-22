@@ -27,6 +27,12 @@ Arudino Uno firmware for a D-0 droid!
 - Run `Arduino: Board Config` and select `Arduino Uno`
 - Run `Arduino: Select Serial Port` and select the port of your Arduino Uno.
 
+## Required Libraries
+- I2Cdev
+- MPU6050
+- Adafruit VS1053 FilePlayer
+- Adafruit PWM Servo Driver
+
 ## Building the Project
 ### Arduino
 - Click `Verify` button
