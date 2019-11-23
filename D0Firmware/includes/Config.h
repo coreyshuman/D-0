@@ -1,5 +1,5 @@
-#ifndef __PLATFORM_H
-#define __PLATFORM_H
+#ifndef __CONFIG_H
+#define __CONFIG_H
 
 #define SERVO_FREQ 60 // Analog servos run at ~60 Hz updates
 

@@ -10,6 +10,7 @@ class Settings {
         
         void setup();
         void save();
+        void reset();
         void printConfig();
 
         // public for testing

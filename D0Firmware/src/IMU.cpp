@@ -2,10 +2,13 @@
 #include "../includes/IMU.h"
 #include "../includes/Config.h"
 #include "../includes/platform/Platform.h"
+#include "MPU6050_6Axis_MotionApps20.h"
+
+MPU6050 mpu(MPU_I2C_ADDRESS);
 
 
 void IMU::setup(imu_offsets_t offsets) {
-    mpu = MPU6050(MPU_I2C_ADDRESS);
+    //mpu = MPU6050(MPU_I2C_ADDRESS);
     mpu.initialize();
     Serial.println(F("Testing device connections..."));
     Serial.println(mpu.testConnection() ? F("MPU6050 connection successful") : F("MPU6050 connection failed"));
@@ -13,7 +16,7 @@ void IMU::setup(imu_offsets_t offsets) {
     Serial.println(F("Initializing DMP..."));
     int devStatus = mpu.dmpInitialize();
 
-    if (offsets != nullptr) {
+    if (offsets.flags.valid) {
         setCalibrationOffsets(offsets);
         mpu.PrintActiveOffsets();
     }
@@ -26,15 +29,15 @@ void IMU::setup(imu_offsets_t offsets) {
 
         // enable Arduino interrupt detection
         Serial.println(F("Enabling interrupt detection (Arduino external interrupt 0)..."));
-        attachInterrupt(0, dmpDataReady, RISING);
-        mpuIntStatus = mpu.getIntStatus();
+        //attachInterrupt(0, dmpDataReady, RISING);
+        uint8_t mpuIntStatus = mpu.getIntStatus();
 
         // set our DMP Ready flag so the main loop() function knows it's okay to use it
         Serial.println(F("DMP ready! Waiting for first interrupt..."));
-        dmpReady = true;
+        bool dmpReady = true;
 
         // get expected DMP packet size for later comparison
-        packetSize = mpu.dmpGetFIFOPacketSize();
+        uint16_t packetSize = mpu.dmpGetFIFOPacketSize();
     } else {
         // ERROR!
         // 1 = initial memory load failed
@@ -80,6 +83,7 @@ imu_offsets_t IMU::calibrate() {
     offsets.xGyroOffset = mpu.getXGyroOffset();
     offsets.yGyroOffset = mpu.getYGyroOffset();
     offsets.zGyroOffset = mpu.getZGyroOffset();
+    offsets.flags.valid = 1;
     return offsets;
 }
 
@@ -100,7 +104,7 @@ imu_offsets_t IMU::calibrate() {
 *			
 * Note:		 	
 ********************************************************************/
-int16_t* IMU::setCalibrationOffsets(imu_offsets_t offsets) {
+void IMU::setCalibrationOffsets(imu_offsets_t offsets) {
     mpu.setXAccelOffset(offsets.xAccelOffset);
     mpu.setYAccelOffset(offsets.yAccelOffset);
     mpu.setZAccelOffset(offsets.zAccelOffset);

@@ -10,7 +10,7 @@ class Audio {
         void loop(int test);
 
     private:
-        Adafruit_VS1053_FilePlayer musicPlayer;
+        Adafruit_VS1053_FilePlayer *audioPlayerPtr;
 };
 
 #endif

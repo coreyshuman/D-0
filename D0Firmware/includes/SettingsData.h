@@ -11,6 +11,17 @@ typedef struct __attribute__((packed)) _imu_offsets_t
     uint16_t    xGyroOffset;
     uint16_t    yGyroOffset;
     uint16_t    zGyroOffset;
+    union
+    {
+        uint8_t map;
+        struct
+        {
+            uint8_t valid   : 1;
+            uint8_t unused : 7;
+        };
+    } flags;
+
+    uint8_t unused[3];
 }   imu_offsets_t;
 
 typedef struct __attribute__((packed)) _servo_calibration_t
@@ -19,12 +30,16 @@ typedef struct __attribute__((packed)) _servo_calibration_t
     uint16_t center;
     uint16_t maximum;
     uint16_t deadband;
+
+    uint8_t unused[8];
 } servo_calibration_t;
 
 typedef struct __attribute__((packed)) _settings_t
 {
     uint16_t    crc;
     uint16_t    length;
+    uint16_t    version;
+    uint16_t    unused1;
 
     imu_offsets_t imuOffsets;
     servo_calibration_t leftDriveServoCal;
@@ -34,26 +49,6 @@ typedef struct __attribute__((packed)) _settings_t
     servo_calibration_t headTurnServoCal;
     servo_calibration_t headTiltServoCal;
 
-    union
-    {
-        uint8_t asAmpli;
-        struct
-        {
-            uint8_t dir   : 4;
-            uint8_t curve : 4;
-        };
-    } uAmpli;
-
-    union
-    {
-        uint8_t asForce;
-        struct
-        {
-            uint8_t amount  : 5;
-            uint8_t axis    : 3;
-        };
-    } uForce;
-   
 }   settings_t;
 
 #define SETTINGS_SIZE sizeof(settings_t)

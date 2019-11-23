@@ -42,7 +42,7 @@ void setup() {
 
     settings.setup();
     audio.setup();
-    imu.setup(settings->imuOffsets);
+    imu.setup(settings.config.imuOffsets);
     motors.setup();
     controller.setup(settings, imu);
 }

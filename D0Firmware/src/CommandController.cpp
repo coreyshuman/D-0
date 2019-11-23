@@ -1,5 +1,8 @@
+#include <Arduino.h>
 #include "../includes/CommandController.h"
 #include "../includes/Settings.h"
+
+
 
 void CommandController::setup(Settings settings, IMU imu) {
     settingsPtr = &settings;
@@ -14,11 +17,13 @@ void CommandController::loop(int test) {
 
         switch(c) {
             case 'a': 
-                settingsPtr->config.leftDriveServoCal.min = Serial.read() - 0x30;
+                settingsPtr->config.leftDriveServoCal.minimum = Serial.read() - 0x30;
                 break;
             case 's': 
                 settingsPtr->save();
-                break;    
+                break; 
+            case 'd':
+                settingsPtr->reset();   
             case 'c': 
                 Serial.println("Calibrating...");
                 settingsPtr->config.imuOffsets = imuPtr->calibrate(); 

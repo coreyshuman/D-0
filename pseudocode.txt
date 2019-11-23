@@ -37,3 +37,7 @@ update motors
 	
 	headTurnMotor = headTurn
 	headTiltMotor = headTilt
+
+	head prelead the turn
+
+	circular interpelation for head up/down?

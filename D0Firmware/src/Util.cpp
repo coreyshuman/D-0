@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include <stdint.h>
 #include "../includes/Util.h"
 
@@ -41,4 +42,11 @@ uint16_t Util::calculateCrc(uint8_t *data, uint32_t len)
 	} 
 
     return (crc & 0xFFFF);
+}
+
+void Util::printHex(byte val) {
+    if(val < 10) {
+        Serial.print("0");
+    }
+    Serial.print(val, HEX);
 }
