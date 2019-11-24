@@ -7,6 +7,7 @@
 // AD0 low = 0x68 (default for SparkFun breakout and InvenSense evaluation board)
 // AD0 high = 0x69
 #define MPU_I2C_ADDRESS 0x68
+#define INA219_I2C_ADDRESS 0x44
 
 // Define hardware platform (pins and peripherals)
 #define PLATFORM_ARDUINO_UNO

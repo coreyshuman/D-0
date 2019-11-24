@@ -40,4 +40,4 @@ update motors
 
 	head prelead the turn
 
-	circular interpelation for head up/down?
+	circular interpolation for head up/down?

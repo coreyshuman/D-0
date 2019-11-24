@@ -24,6 +24,35 @@ typedef struct __attribute__((packed)) _imu_offsets_t
     uint8_t unused[3];
 }   imu_offsets_t;
 
+typedef struct __attribute__((packed)) _free_animation_t
+{
+    float    stabilizationP;
+    float    stabilizationI;
+    float    stabilizationD;
+    float    neckLeanP;
+    float    neckLeanI;
+    float    neckLeanD;
+    float    headTurnP;
+    float    headTurnI;
+    float    headTurnD;
+
+    uint32_t    unused1[7];
+    
+    union
+    {
+        uint8_t map;
+        struct
+        {
+            uint8_t stabilizationEnabled    : 1;
+            uint8_t neckLeanEnabled         : 1;
+            uint8_t headTurnEnabled         : 1;
+            uint8_t unused                  : 5;
+        };
+    } flags;
+
+    uint8_t unused2[3];
+}   free_animation_t;
+
 typedef struct __attribute__((packed)) _servo_calibration_t
 {
     uint16_t minimum;
@@ -34,7 +63,7 @@ typedef struct __attribute__((packed)) _servo_calibration_t
     uint8_t unused[8];
 } servo_calibration_t;
 
-typedef struct __attribute__((packed)) _settings_t
+typedef struct __attribute__((packed)) _config_t
 {
     uint16_t    crc;
     uint16_t    length;
@@ -48,9 +77,10 @@ typedef struct __attribute__((packed)) _settings_t
     servo_calibration_t neckLeanServoCal;
     servo_calibration_t headTurnServoCal;
     servo_calibration_t headTiltServoCal;
+    free_animation_t freeAnimation;
 
-}   settings_t;
+}   config_t;
 
-#define SETTINGS_SIZE sizeof(settings_t)
+#define SETTINGS_SIZE sizeof(config_t)
 
 #endif

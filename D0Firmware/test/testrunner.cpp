@@ -7,7 +7,7 @@
 
 TEST_CASE( "Test settings", "[settings]" ) {
     Settings settings;
-    settings_t config = {
+    config_t config = {
         .crc = 0,
         .length = SETTINGS_SIZE
     };

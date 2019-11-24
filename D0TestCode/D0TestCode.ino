@@ -97,13 +97,16 @@ void setup() {
     // join I2C bus (I2Cdev library doesn't do this automatically)
     #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
         Wire.begin();
-        TWBR = 24; // 400kHz I2C clock (200kHz if CPU is 8MHz)
+        //TWBR = 24; // 400kHz I2C clock (200kHz if CPU is 8MHz)
+        Wire.setClock(400000);
     #elif I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_FASTWIRE
         Fastwire::setup(400, true);
     #endif
 
-    // initialize serial communication
+    delay(3000);
+    // initialize Serial1 communication
     Serial.begin(115200);
+    //Serial.read();
     Serial.println(F("D-0 Test Code"));
 
     Serial.println(F("Initializing PWM..."));
@@ -117,13 +120,13 @@ void setup() {
   Serial.println(F("Initializing Audio..."));
     if (! musicPlayer.begin()) { // initialise the music player
        Serial.println(F("Couldn't find VS1053, do you have the right pins defined?"));
-       while (1);
+       //while (1);
     }
     Serial.println(F("VS1053 found"));
     
      if (!SD.begin(CARDCS)) {
       Serial.println(F("SD failed, or not present"));
-      while (1);  // don't do anything more
+      //while (1);  // don't do anything more
     }
 
     

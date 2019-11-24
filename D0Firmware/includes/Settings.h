@@ -6,7 +6,7 @@
 
 class Settings {
     public:
-        settings_t config;
+        config_t config;
         
         void setup();
         void save();
@@ -14,15 +14,16 @@ class Settings {
         void printConfig();
 
         // public for testing
-        bool verifyConfig(settings_t *config);
-        void setDefaultConfig(settings_t *config);
+        bool verifyConfig(config_t *config);
+        void setDefaultConfig(config_t *config);
+        void setV2Defaults(config_t *configPtr);
         
 
     private:
         
 
-        void writeEeprom(settings_t *config);
-        void readEeprom(settings_t *config);
+        void writeEeprom(config_t *config);
+        void readEeprom(config_t *config);
 };
 
 #endif

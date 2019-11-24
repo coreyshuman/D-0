@@ -32,6 +32,7 @@ Arudino Uno firmware for a D-0 droid!
 - MPU6050
 - Adafruit VS1053 FilePlayer
 - Adafruit PWM Servo Driver
+- Adafruit INA219
 
 ## Building the Project
 ### Arduino

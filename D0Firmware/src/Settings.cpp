@@ -21,17 +21,23 @@ void Settings::reset() {
     setDefaultConfig(&config);
 }
 
-bool Settings::verifyConfig(settings_t *configPtr)
+bool Settings::verifyConfig(config_t *configPtr)
 {
+    bool needSave = false;
     if(configPtr == nullptr) return false;
     if(configPtr->length > EEPROM.length() || configPtr->length < 4) return false;
 
     uint16_t crc = Util::calculateCrc(((uint8_t *)configPtr)+2, configPtr->length - 2);
     if(crc == configPtr->crc && configPtr->length <= SETTINGS_SIZE) {
-        
+        // apply version updates
         if(configPtr->version < 2) {
-            // future - check for possible config updates
-            // applyV2Defaults();
+            setV2Defaults(configPtr);
+            needSave = true;
+        }
+
+        if(needSave) {
+            configPtr->crc = Util::calculateCrc(((uint8_t *)configPtr)+2, SETTINGS_SIZE-2);
+            writeEeprom(configPtr);
         }
         return true;
     } 
@@ -39,11 +45,11 @@ bool Settings::verifyConfig(settings_t *configPtr)
     return false;
 }
 
-void Settings::setDefaultConfig(settings_t *configPtr)
+void Settings::setDefaultConfig(config_t *configPtr)
 {
     int i;
     if(configPtr == nullptr) {
-        configPtr = new settings_t();
+        configPtr = new config_t();
     }
 
     uint8_t *tmpPtr = (uint8_t *)configPtr;
@@ -79,8 +85,24 @@ void Settings::setDefaultConfig(settings_t *configPtr)
     configPtr->headTiltServoCal.maximum = 600;
     configPtr->headTiltServoCal.deadband = 50;
     
+    setV2Defaults(configPtr);
 
     configPtr->crc = Util::calculateCrc(((uint8_t *)configPtr)+2, SETTINGS_SIZE-2);
+}
+
+void Settings::setV2Defaults(config_t *configPtr) {
+    int i;
+    uint8_t *tmpPtr = (uint8_t *)(&configPtr->freeAnimation);
+    for(i=0; i<sizeof(free_animation_t); i++) {
+        *tmpPtr++ = 0;
+    }
+    configPtr->freeAnimation.flags.headTurnEnabled = true;
+    configPtr->freeAnimation.flags.neckLeanEnabled = true;
+    configPtr->freeAnimation.flags.stabilizationEnabled = true;
+    configPtr->freeAnimation.stabilizationP = 100.0;
+    configPtr->freeAnimation.headTurnP = 100.0;
+    configPtr->freeAnimation.neckLeanP = 100.0;
+    configPtr->version = 2;
 }
 
 void Settings::printConfig() {
@@ -95,7 +117,7 @@ void Settings::printConfig() {
     Serial.print("\n");
 }
 
-void Settings::writeEeprom(settings_t *configPtr) {
+void Settings::writeEeprom(config_t *configPtr) {
     uint8_t *data = (uint8_t *)configPtr;
     int i;
     
@@ -104,7 +126,7 @@ void Settings::writeEeprom(settings_t *configPtr) {
     }
 }
 
-void Settings::readEeprom(settings_t *configPtr) {
+void Settings::readEeprom(config_t *configPtr) {
     uint8_t *data = (uint8_t *)configPtr;
     int i;
     
