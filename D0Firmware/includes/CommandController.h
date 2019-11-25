@@ -6,18 +6,20 @@
 #include "IMU.h"
 #include "BatteryMonitor.h"
 #include "CommandData.h"
+#include "SerialProcessor.h"
 
 class CommandController {
     public:
-        commands_t commands;
+        command_state_t commands;
         
-        void setup(Settings &settings, IMU &imu, BatteryMonitor &batteryMonitor);
+        void setup(SerialProcessor &serialProcessor, Settings &settings, IMU &imu, BatteryMonitor &batteryMonitor);
         void loop(int test);
 
     private:
         Settings *settingsPtr;
         IMU *imuPtr;
         BatteryMonitor *batteryMonitorPtr;
+        SerialProcessor *serialProcessorPtr;
 };
 
 #endif

@@ -20,6 +20,7 @@ IMU imu;
 Motors motors;
 Settings settings;
 BatteryMonitor batteryMonitor;
+SerialProcessor serialProcessor;
 
 //cts debug
 bool loopPinState = false;
@@ -58,7 +59,8 @@ void setup() {
     Serial.println(F("E"));
     batteryMonitor.setup();
     Serial.println(F("F"));
-    controller.setup(settings, imu, batteryMonitor);
+    serialProcessor.setup();
+    controller.setup(serialProcessor, settings, imu, batteryMonitor);
     Serial.println(F("G"));
 }
 
@@ -72,7 +74,8 @@ void loop() {
     audio.loop(1);
     imu.loop(2);
     batteryMonitor.loop();
-    controller.loop(1);
+    //controller.loop(1);
+    serialProcessor.loop(7);
     motors.loop(controller.commands, imu.imuData, settings.config);
     digitalWrite(53, loopPinState);
     loopPinState = !loopPinState;

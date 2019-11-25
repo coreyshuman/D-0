@@ -13,7 +13,7 @@
 class Motors {
     public:
         void setup();
-        void loop(commands_t &commands, imu_data_t &imuData, config_t &config);
+        void loop(command_state_t &commands, imu_data_t &imuData, config_t &config);
 
     private:
         Adafruit_PWMServoDriver pwm;

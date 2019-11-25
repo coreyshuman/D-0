@@ -4,10 +4,11 @@
 
 
 
-void CommandController::setup(Settings &settings, IMU &imu, BatteryMonitor &batteryMonitor) {
+void CommandController::setup(SerialProcessor &serialProcessor, Settings &settings, IMU &imu, BatteryMonitor &batteryMonitor) {
     settingsPtr = &settings;
     imuPtr = &imu;
     batteryMonitorPtr = &batteryMonitor;
+    serialProcessorPtr = &serialProcessor;
 
     commands.driveSpeed = COMMAND_RANGE_MID;
     commands.turnSpeed = COMMAND_RANGE_MID;
@@ -48,6 +49,9 @@ void CommandController::loop(int test) {
                 Serial.println("Done.");
                 break;
             case 'p': settingsPtr->printConfig(); break;
+            case 'w':
+                serialProcessorPtr->writeString("This is a test string.");
+                break;
             case 'v':
                 Serial.print("Bus Voltage:   "); Serial.print(batteryMonitorPtr->busVoltage); Serial.println(" V");
                 Serial.print("Shunt Voltage: "); Serial.print(batteryMonitorPtr->shuntVoltage); Serial.println(" mV");

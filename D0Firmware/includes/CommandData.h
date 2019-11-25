@@ -5,7 +5,7 @@
 #define COMMAND_RANGE_MID   0
 #define COMMAND_RANGE_MAX   1000
 
-typedef struct __attribute__((packed)) _commands_t
+typedef struct __attribute__((packed)) _command_state_t
 {
     uint16_t    driveSpeed;
     uint16_t    turnSpeed;
@@ -20,6 +20,14 @@ typedef struct __attribute__((packed)) _commands_t
         };
     } flags;
 
-}   commands_t;
+}   command_state_t;
+
+typedef struct _command_t
+{
+    char commandCode[2];
+    char payload[64];
+    uint8_t payloadLength;
+
+} command_t;
 
 #endif

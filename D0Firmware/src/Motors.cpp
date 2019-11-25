@@ -13,7 +13,7 @@ void Motors::setup() {
     pwm.setPWMFreq(SERVO_FREQ);  // Analog servos run at ~60 Hz updates
 }
 
-void Motors::loop(commands_t &commands, imu_data_t &imuData, config_t &config) {
+void Motors::loop(command_state_t &commands, imu_data_t &imuData, config_t &config) {
     int i;
     uint16_t pwmVal;
     int16_t commandVal;
