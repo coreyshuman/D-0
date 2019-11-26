@@ -25,6 +25,17 @@ SerialProcessor serialProcessor;
 //cts debug
 bool loopPinState = false;
 
+
+// ================================================================
+// ===                    HELPER FUNCTIONS                      ===
+// ================================================================
+
+// create non-member function to register callback between classes
+// since Arduino doesn't support std::bind
+void serialProcessedCallback(char * payload, uint8_t length) {
+    controller.addCommand(payload, length);
+}
+
 // ================================================================
 // ===                      INITIAL SETUP                       ===
 // ================================================================
@@ -62,6 +73,8 @@ void setup() {
     serialProcessor.setup();
     controller.setup(serialProcessor, settings, imu, batteryMonitor);
     Serial.println(F("G"));
+    serialProcessor.registerProcessedCallback(serialProcessedCallback);
+    Serial.println(F("H"));
 }
 
 
@@ -74,9 +87,11 @@ void loop() {
     audio.loop(1);
     imu.loop(2);
     batteryMonitor.loop();
-    //controller.loop(1);
+    
     serialProcessor.loop(7);
-    motors.loop(controller.commands, imu.imuData, settings.config);
+    controller.loop(1);
+    motors.loop(controller.commandState, imu.imuData, settings.config);
     digitalWrite(53, loopPinState);
     loopPinState = !loopPinState;
 }
+

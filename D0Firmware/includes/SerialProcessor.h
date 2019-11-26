@@ -6,12 +6,15 @@
 #define BUFFER_LENGTH_RX        64
 #define BUFFER_LENGTH_PARSED    64
 
+#define PROCESSED_CALLBACK_FUNCTION(func, payload, length)  void (*func)(char * payload, uint8_t length)
+
 class SerialProcessor {
     public:
         void setup();
         void loop(int test);
         void writeBytes(const byte *payload, uint8_t length);
         void writeString(const char *payload);
+        void registerProcessedCallback(PROCESSED_CALLBACK_FUNCTION(func,,));
 
 
     private:
@@ -36,7 +39,7 @@ class SerialProcessor {
 
         void parseReceived(char data);
         uint8_t calculateChecksum();
-        void receivedPayloadCallback();
+        PROCESSED_CALLBACK_FUNCTION(processedCallback,payload,length) = nullptr;
 };
 
 #endif

@@ -82,7 +82,7 @@ void SerialProcessor::parseReceived(char data) {
         case '\n':
         case '\r':
         case '*': //cts debug
-            if(parseCount >= 4) {
+            if(parseCount >= 3) {
                 spState = SPVerifyPayload;
             } else {
                 spState = SPWaitForStartChar;
@@ -101,8 +101,10 @@ void SerialProcessor::parseReceived(char data) {
             parseBuffer[parseCount++] = data;
             break;
         case SPVerifyPayload:
-            if(calculateChecksum() == 0xFF || parseBuffer[parseCount-1] == 0x00) {  // cts debug
-                receivedPayloadCallback();
+            if(calculateChecksum() == 0xFF || parseBuffer[parseCount-1] == '&') {  // cts debug
+                if(processedCallback != nullptr) {
+                    processedCallback(parseBuffer, parseCount);
+                }
                 Serial.println("Verified");
             } else {
                 Serial.println("INVALID");
@@ -122,6 +124,7 @@ uint8_t SerialProcessor::calculateChecksum() {
     return checksum;
 }
 
-void SerialProcessor::receivedPayloadCallback() {
-    Serial.println("Received Payload");
+void SerialProcessor::registerProcessedCallback(PROCESSED_CALLBACK_FUNCTION(func,,)) {
+    processedCallback = func;
+    Serial.println("Registered Callback");
 }

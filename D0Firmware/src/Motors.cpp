@@ -13,13 +13,13 @@ void Motors::setup() {
     pwm.setPWMFreq(SERVO_FREQ);  // Analog servos run at ~60 Hz updates
 }
 
-void Motors::loop(command_state_t &commands, imu_data_t &imuData, config_t &config) {
+void Motors::loop(command_state_t &commandState, imu_data_t &imuData, config_t &config) {
     int i;
     uint16_t pwmVal;
     int16_t commandVal;
-    if(commands.flags.armed) {
+    if(commandState.flags.armed) {
         int16_t stabilizationSpeed = 0;
-        int16_t turnSpeedFactor = commands.turnSpeed / 2;
+        int16_t turnSpeedFactor = commandState.turnSpeed / 2;
 
         // stabilization
         if(config.freeAnimation.flags.stabilizationEnabled) {
@@ -28,7 +28,7 @@ void Motors::loop(command_state_t &commands, imu_data_t &imuData, config_t &conf
         }
 
         // left drive motor
-        commandVal = commands.driveSpeed + turnSpeedFactor;
+        commandVal = commandState.driveSpeed + turnSpeedFactor;
         if(commandVal > COMMAND_RANGE_MID - config.leftDriveServoCal.deadband &&
             commandVal < COMMAND_RANGE_MID + config.leftDriveServoCal.deadband) {
                 commandVal = COMMAND_RANGE_MID;
@@ -45,7 +45,7 @@ void Motors::loop(command_state_t &commands, imu_data_t &imuData, config_t &conf
         
 
         // right drive motor
-        commandVal = commands.driveSpeed + turnSpeedFactor;
+        commandVal = commandState.driveSpeed + turnSpeedFactor;
         if(commandVal > COMMAND_RANGE_MID - config.leftDriveServoCal.deadband &&
             commandVal < COMMAND_RANGE_MID + config.leftDriveServoCal.deadband) {
                 pwm.setPin(DRIVE_MOTOR_RIGHT, 0);
