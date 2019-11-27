@@ -3,19 +3,124 @@
 #include "../includes/CommandController.h"
 #include "../includes/Settings.h"
 
-void commandArm() {
+typedef struct _command_table_t
+{
+    char commandCode[2];
+    uint8_t paramsMin;
+    uint8_t paramsMax;
+    void (*commandHandler)(CommandController &controller, _command_table_t cTable, command_t command);
+
+} command_table_t;
+
+void commandArm(CommandController &controller, command_table_t cTable, command_t command) {
     Serial.println("Command Arm");
+    Serial.print(" min ");Serial.print(cTable.paramsMin);Serial.print(" max ");Serial.print(cTable.paramsMax);
+    Serial.print(" len ");Serial.print(command.payloadLength);
 }
 
-void printConfig() {
+void printConfig(CommandController &controller, command_table_t cTable, command_t command) {
     Serial.println("Print Config");
+    Serial.print(" min ");Serial.print(cTable.paramsMin);Serial.print(" max ");Serial.print(cTable.paramsMax);
+    Serial.print(" len ");Serial.print(command.payloadLength);
 }
 
-#define COMMAND_TABLE_COUNT 2
-const command_table_t commandTable[] = {
-    {"ar", 0, 0, commandArm},
-    {"pc", 0, 0, printConfig}
+typedef struct _param_t {
+    char *dataPtr;
+    uint8_t length;
+} param_t;
+
+class Params {
+    public:
+        uint8_t count;
+        Params(uint8_t);
+        ~Params();
+        bool add(char *paramPtr, uint8_t paramLength);
+        param_t &operator[](int);
+
+    private:
+        param_t *params;
+        uint8_t paramMax;
 };
+
+param_t &Params::operator[](int index) {
+    //if(index < paramMax) {
+        return params[index];
+    //}
+    //return (param_t)nullptr;
+}
+
+bool Params::add(char *paramPtr, uint8_t paramLength) {
+    if(count >= paramMax) return false;
+    params[count].dataPtr = paramPtr;
+    params[count].length = paramLength;
+    count++;
+    return true;
+}
+
+Params::Params(uint8_t max) {
+    params = new param_t[max];
+    paramMax = max;
+    count = 0;
+}
+
+Params::~Params() {
+    delete []params;
+}
+
+
+Params parseParams(char *payload, const uint8_t length, const uint8_t maxParams) {
+    Params params(maxParams);
+    int i;
+    char *tmpParamPtr = &payload[0];
+    uint8_t tmpParamLength = 0;
+
+    for(i = 0; i < length; i++) {
+        if(payload[i] == ',') {
+            // zero pad for easy string extraction
+            payload[i] = '\0';
+            if(!params.add(tmpParamPtr, tmpParamLength)) {
+                return params; // exceeded max params so exit
+            }
+            tmpParamPtr = &payload[i+1];
+            tmpParamLength = 0;
+        } else {
+            tmpParamLength++;
+        }
+    }
+    // add final param if exists
+    if(tmpParamLength > 0) {
+        params.add(tmpParamPtr, tmpParamLength);
+    }
+
+    return params;
+}
+
+void testtest(CommandController &controller, command_table_t cTable, command_t command) {
+    int i;
+    Serial.println("test");
+    Serial.print(" min ");Serial.print(cTable.paramsMin);Serial.print(" max ");Serial.print(cTable.paramsMax);
+    Serial.print(" len ");Serial.print(command.payloadLength);Serial.println();
+
+    Params params = parseParams(command.payload, command.payloadLength, cTable.paramsMax);
+    Serial.print("Params found: ");Serial.print(params.count);Serial.println();
+    if(params.count < cTable.paramsMin) {
+        Serial.println("Not enough parameters.");
+    }
+
+    for(i = 0; i<params.count; i++) {
+        Serial.print(i);Serial.print(": ");
+        Serial.println(params[i].dataPtr);
+    }
+}
+
+
+
+const command_table_t commandTable[COMMAND_TABLE_COUNT] = {
+    {"ar", 0, 0, commandArm},
+    {"pc", 0, 0, printConfig},
+    {"tt", 1, 3, testtest}
+};
+
 
 
 
@@ -32,14 +137,15 @@ void CommandController::setup(SerialProcessor &serialProcessor, Settings &settin
 }
 
 void CommandController::addCommand(char *payload, uint8_t length) {
-    Serial.println("Got Processed Command");
     int i = 0;
     commandBuffer[commandBufferWriteIndex].commandCode[0] = payload[0];
     commandBuffer[commandBufferWriteIndex].commandCode[1] = payload[1];
-    for(i = 0; i < length - 2, i < COMMAND_PAYLOAD_LENGTH; i++) {
+    // copy payload, don't include command code or checksum
+    for(i = 0; i < length - 3 && i < COMMAND_PAYLOAD_LENGTH-1; i++) {
         commandBuffer[commandBufferWriteIndex].payload[i] = payload[i+2];
     }
-    commandBuffer[commandBufferWriteIndex].payloadLength = length - 2;
+    commandBuffer[commandBufferWriteIndex].payload[i] = '\0';
+    commandBuffer[commandBufferWriteIndex].payloadLength = length - 3;
     commandBufferCount++;
     commandBufferWriteIndex++;
 
@@ -53,16 +159,23 @@ void CommandController::addCommand(char *payload, uint8_t length) {
     }
 }
 
-void CommandController::processCommand(command_t command) {
-    int i;
+void CommandController::processCommand(command_t &command) {
+    int i, j;
     command_table_t potentialCommand;
     for(i = 0; i < COMMAND_TABLE_COUNT; i++) {
-        potentialCommand = commandTable[i];
+        // copy command table in flash to local ram variable
+        const uint8_t *commTablePtr = (uint8_t *)&commandTable[i];
+        uint8_t *potCommPtr = (uint8_t *)&potentialCommand;
+        for(j = 0; j < sizeof(command_table_t); j++) {
+            *potCommPtr++ = *commTablePtr++;
+        }
+        //potentialCommand = commandTable[i];
         if(command.commandCode[0] != potentialCommand.commandCode[0]) continue;
         if(command.commandCode[1] != potentialCommand.commandCode[1]) continue;
 
         Serial.println("Command Found!");
-        potentialCommand.commandHandler();
+        //(this->*commandTable[i].commandHandler)();
+        potentialCommand.commandHandler(*this, potentialCommand, command);
         return;
     }
     Serial.println("Command not found.");

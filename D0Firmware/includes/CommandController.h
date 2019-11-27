@@ -8,14 +8,9 @@
 #include "CommandData.h"
 #include "SerialProcessor.h"
 
-typedef struct _command_table_t
-{
-    char commandCode[2];
-    uint8_t paramsMin;
-    uint8_t paramsMax;
-    void (*commandHandler)();
+#define COMMAND_TABLE_COUNT 5
 
-} command_table_t;
+
 
 class CommandController {
     public:
@@ -24,7 +19,7 @@ class CommandController {
         void setup(SerialProcessor &serialProcessor, Settings &settings, IMU &imu, BatteryMonitor &batteryMonitor);
         void loop(int test);
         void addCommand(char *, uint8_t length);
-        void processCommand(command_t command);
+        void processCommand(command_t &command);
 
     private:
         Settings *settingsPtr;
@@ -35,6 +30,30 @@ class CommandController {
         uint8_t commandBufferCount;
         uint8_t commandBufferWriteIndex;
         uint8_t commandBufferReadIndex;
+/*
+        static void commandArm() {
+            Serial.println("Command Arm");
+        }
+
+        static void printConfig() {
+            Serial.println("Print Config");
+        }
+
+        typedef struct _command_table_t
+        {
+            char commandCode[2];
+            uint8_t paramsMin;
+            uint8_t paramsMax;
+            void (CommandController::*commandHandler)();
+
+        } command_table_t;
+
+        static command_table_t commandTable[COMMAND_TABLE_COUNT] = {
+            {"ar", 0, 0, &CommandController::commandArm},
+            {"pc", 0, 0, &CommandController::printConfig},
+            {"pc", 0, 0, &CommandController::printConfig}
+        };
+*/
 
         
 };
