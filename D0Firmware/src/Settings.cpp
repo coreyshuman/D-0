@@ -1,5 +1,7 @@
-#include <Arduino.h>
-#include <EEPROM.h>
+#ifndef _TEST_RUNNER
+    #include <Arduino.h>
+    #include <EEPROM.h>
+#endif
 #include "../includes/Settings.h"
 #include "../includes/Util.h"
 

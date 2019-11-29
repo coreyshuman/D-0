@@ -13,7 +13,7 @@ SOURCES := $(shell find $(SRCDIR) -type f -name *.$(SRCEXT))
 OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.o))
 CFLAGS := -g # -Wall
 LIB := -lm # -pthread
-INC := -I include
+INC := -I includes
 
 $(TARGET): $(OBJECTS)
 	@echo " Linking..."
@@ -30,7 +30,7 @@ clean:
 # Tests
 testrunner:
 	@echo " Building Tests...";
-	$(CC) $(CFLAGS) test/testrunner.cpp $(SOURCES) $(INC) $(LIB) -o bin/testrunner
+	$(CC) $(CFLAGS) test/testrunner.cpp src/Util.cpp src/Settings.cpp $(INC) $(LIB) -D_TEST_RUNNER -include includes/test/Arduino.hpp -o bin/testrunner
 
 
 .PHONY: clean

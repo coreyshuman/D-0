@@ -1,3 +1,4 @@
 #!/bin/bash
-make testrunner -j 8
+set -e
+make testrunner -j 4
 ./bin/testrunner
