@@ -3,26 +3,8 @@
 #include "../includes/CommandController.h"
 #include "../includes/Settings.h"
 
-typedef struct _command_table_t
-{
-    char commandCode[2];
-    uint8_t paramsMin;
-    uint8_t paramsMax;
-    void (*commandHandler)(CommandController &controller, _command_table_t cTable, command_t command);
-
-} command_table_t;
-
-void commandArm(CommandController &controller, command_table_t cTable, command_t command) {
-    Serial.println("Command Arm");
-    Serial.print(" min ");Serial.print(cTable.paramsMin);Serial.print(" max ");Serial.print(cTable.paramsMax);
-    Serial.print(" len ");Serial.print(command.payloadLength);
-}
-
-void printConfig(CommandController &controller, command_table_t cTable, command_t command) {
-    Serial.println("Print Config");
-    Serial.print(" min ");Serial.print(cTable.paramsMin);Serial.print(" max ");Serial.print(cTable.paramsMax);
-    Serial.print(" len ");Serial.print(command.payloadLength);
-}
+const char TAB = ("\t");
+const char NEWLINE = ("\n");
 
 typedef struct _param_t {
     char *dataPtr;
@@ -95,7 +77,18 @@ Params parseParams(char *payload, const uint8_t length, const uint8_t maxParams)
     return params;
 }
 
-void testtest(CommandController &controller, command_table_t cTable, command_t command) {
+typedef struct _command_table_t
+{
+    char commandCode[2];
+    uint8_t paramsMin;
+    uint8_t paramsMax;
+    void (*commandHandler)(CommandController &controller, _command_table_t &cTable, command_t &command, Params &params);
+
+} command_table_t;
+
+
+
+void testtest(CommandController &controller, command_table_t &cTable, command_t &command, Params &params2) {
     int i;
     Serial.println("test");
     Serial.print(" min ");Serial.print(cTable.paramsMin);Serial.print(" max ");Serial.print(cTable.paramsMax);
@@ -113,12 +106,97 @@ void testtest(CommandController &controller, command_table_t cTable, command_t c
     }
 }
 
+/*********************************************************************
+ * Response Helpers
+ ********************************************************************/
+void cResponseOK(CommandController &controller) {
+    controller.serialProcessorPtr->println(F("OK"));
+}
+
+void cResponseNotEnoughParams(CommandController &controller) {
+    controller.serialProcessorPtr->println(F("NEP"));
+}
+
+void cResponseCommandNotFound(CommandController &controller) {
+    controller.serialProcessorPtr->println(F("CNF"));
+}
+
+void cRuntimeFreeAnimation(CommandController &controller, command_table_t &cTable, command_t &command, Params &params) {
+    //controller.commandState.flags.
+}
 
 
-const command_table_t commandTable[COMMAND_TABLE_COUNT] = {
-    {"ar", 0, 0, commandArm},
-    {"pc", 0, 0, printConfig},
-    {"tt", 1, 3, testtest}
+/*********************************************************************
+ * Command Handler Callbacks
+ ********************************************************************/
+void cRuntimeArm(CommandController &controller, command_table_t &cTable, command_t &command, Params &params) {
+    controller.commandState.flags.armed = true;
+    cResponseOK(controller);
+}
+
+void cBatteryPrint(CommandController &controller, command_table_t &cTable, command_t &command, Params &params) {
+    controller.serialProcessorPtr->print("Bus Voltage:   "); controller.serialProcessorPtr->print(controller.batteryMonitorPtr->busVoltage); controller.serialProcessorPtr->println(" V");
+    controller.serialProcessorPtr->print("Shunt Voltage: "); controller.serialProcessorPtr->print(controller.batteryMonitorPtr->shuntVoltage); controller.serialProcessorPtr->println(" mV");
+    controller.serialProcessorPtr->print("Load Voltage:  "); controller.serialProcessorPtr->print(controller.batteryMonitorPtr->loadVoltage); controller.serialProcessorPtr->println(" V");
+    controller.serialProcessorPtr->print("Current:       "); controller.serialProcessorPtr->print(controller.batteryMonitorPtr->current); controller.serialProcessorPtr->println(" mA");
+    controller.serialProcessorPtr->print("Power:         "); controller.serialProcessorPtr->print(controller.batteryMonitorPtr->power); controller.serialProcessorPtr->println(" mW");
+    controller.serialProcessorPtr->println();
+    cResponseOK(controller);
+}
+
+void cImuCalibrate(CommandController &controller, command_table_t &cTable, command_t &command, Params &params) {
+    controller.imuPtr->calibrate();
+    cResponseOK(controller);
+}
+
+void cImuPrint(CommandController &controller, command_table_t &cTable, command_t &command, Params &params) {
+    controller.serialProcessorPtr->print(F("ypr\t"));
+    controller.serialProcessorPtr->print(controller.imuPtr->imuData.ypr.x * 180/M_PI);
+    controller.serialProcessorPtr->print(TAB);
+    controller.serialProcessorPtr->print(controller.imuPtr->imuData.ypr.y * 180/M_PI);
+    controller.serialProcessorPtr->print(TAB);
+    controller.serialProcessorPtr->print(controller.imuPtr->imuData.ypr.z * 180/M_PI);
+    controller.serialProcessorPtr->println();
+}
+
+void cSettingsFreeAnimation(CommandController &controller, command_table_t &cTable, command_t &command, Params &params) {
+
+}
+
+void cSettingsServoCalibration(CommandController &controller, command_table_t &cTable, command_t &command, Params &params) {
+
+}
+
+void cSettingsPrint(CommandController &controller, command_table_t &cTable, command_t &command, Params &params) {
+    controller.settingsPtr->printConfig();
+    cResponseOK(controller);
+}
+
+void cSettingsReset(CommandController &controller, command_table_t &cTable, command_t &command, Params &params) {
+    controller.settingsPtr->reset();
+    cResponseOK(controller);
+}
+
+void cSettingsSave(CommandController &controller, command_table_t &cTable, command_t &command, Params &params) {
+    controller.settingsPtr->save();
+    cResponseOK(controller);
+}
+
+const command_table_t commandTable[] = {
+    // runtime
+    {"rf", 0, 0, cRuntimeFreeAnimation},
+    {"rr", 0, 0, cRuntimeArm},
+    
+    {"tt", 1, 3, testtest},
+    // imu
+    {"ic", 0, 0, cImuCalibrate},
+    {"ip", 0, 0, cImuPrint},
+    // settings
+    {"sf", 0, 0, cSettingsFreeAnimation},
+    {"sc", 0, 0, cSettingsServoCalibration},
+    {"sp", 0, 0, cSettingsPrint},
+    {"sr", 1, 3, cSettingsReset},
+    {"ss", 1, 3, cSettingsSave}
 };
 
 
@@ -151,7 +229,7 @@ void CommandController::addCommand(char *payload, uint8_t length) {
 
     if(commandBufferCount > COMMAND_BUFFER_COUNT) {
         commandBufferCount = COMMAND_BUFFER_COUNT;
-        Serial.println("COMMAND OVERFLOW");
+        Serial.println(F("COMMAND OVERFLOW"));
     }
 
     if(commandBufferWriteIndex >= COMMAND_BUFFER_COUNT) {
@@ -169,16 +247,19 @@ void CommandController::processCommand(command_t &command) {
         for(j = 0; j < sizeof(command_table_t); j++) {
             *potCommPtr++ = *commTablePtr++;
         }
-        //potentialCommand = commandTable[i];
+
         if(command.commandCode[0] != potentialCommand.commandCode[0]) continue;
         if(command.commandCode[1] != potentialCommand.commandCode[1]) continue;
 
-        Serial.println("Command Found!");
-        //(this->*commandTable[i].commandHandler)();
-        potentialCommand.commandHandler(*this, potentialCommand, command);
+        Params params = parseParams(command.payload, command.payloadLength, potentialCommand.paramsMax);
+        if(params.count < potentialCommand.paramsMin) {
+            cResponseNotEnoughParams(*this);
+            return;
+        }
+        potentialCommand.commandHandler(*this, potentialCommand, command, params);
         return;
     }
-    Serial.println("Command not found.");
+    cResponseCommandNotFound(*this);
 }
 
 void CommandController::loop(int test) {

@@ -1,4 +1,6 @@
-
+#ifndef _TEST_RUNNER
+    #include <Arduino.h>
+#endif
 #include <stdint.h>
 #include "../includes/Util.h"
 
@@ -46,7 +48,7 @@ uint16_t Util::calculateCrc(uint8_t *data, uint32_t len)
     return (crc & 0xFFFF);
 }
 
-void Util::printHex(byte val) {
+void Util::printHex(uint8_t val) {
     if(val < 10) {
         Serial.print("0");
     }
@@ -84,7 +86,7 @@ int16_t Util::atoi(const char *str)
     }
 
     while(str[idx] != 0) {
-        byte c = (byte)str[idx];
+        char c = str[idx];
         if(c <= '9' && c >= '0') {
             if(isOnesPlace) {
                 isOnesPlace = false;
@@ -122,6 +124,7 @@ int16_t Util::atoi(const char *str)
 ********************************************************************/	
 float Util::atof(const char *str)
 {
+    char c;
     float val = 0;
     bool isNegative = false;
     bool isOnesPlace = true;
@@ -135,7 +138,7 @@ float Util::atof(const char *str)
     }
 
     while(str[idx] != 0) {
-        byte c = (byte)str[idx];
+        c = str[idx];
         if(c == '.') {
             if(isFraction) { // duplicate decimal point
                 return 0.0;

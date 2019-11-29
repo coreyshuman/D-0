@@ -39,18 +39,19 @@ void SerialProcessor::loop(int test) {
         }
         rxCount--;
     }
-
-
 }
 
-void SerialProcessor::writeBytes(const byte *payload, uint8_t length) {
-    while(length > 0) {
-        txBuffer[txWriteIndex++] = *payload++;
-        if(txWriteIndex >= BUFFER_LENGTH_TX) {
-            txWriteIndex = 0;
-        }
+size_t SerialProcessor::write(uint8_t data) {
+    txBuffer[txWriteIndex++] = data;
+    if(txWriteIndex >= BUFFER_LENGTH_TX) {
+        txWriteIndex = 0;
+    }
+}
+
+size_t SerialProcessor::write(const uint8_t *payload, size_t length) {
+    while(length --) {
+        write(*payload++);
         txCount++;
-        length--;
     }
 
     if(txCount > BUFFER_LENGTH_TX) {
@@ -58,7 +59,7 @@ void SerialProcessor::writeBytes(const byte *payload, uint8_t length) {
         Serial.println("TX OVERFLOW");
     }
 }
-
+/*
 void SerialProcessor::writeString(const char *payload) {
     char *tmpPointer = payload;
     uint8_t strLength = 0;
@@ -67,9 +68,9 @@ void SerialProcessor::writeString(const char *payload) {
         strLength++;
     }
 
-    writeBytes(payload, strLength);
+    write(payload, strLength);
 }
-
+*/
 void SerialProcessor::parseReceived(char data) {
 
     // handle special characters

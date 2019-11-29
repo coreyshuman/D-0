@@ -1,4 +1,6 @@
 
+#include <Print.h>
+
 #ifndef __SERIALPROCESSOR_H
 #define __SERIALPROCESSOR_H
 
@@ -8,13 +10,15 @@
 
 #define PROCESSED_CALLBACK_FUNCTION(func, payload, length)  void (*func)(char * payload, uint8_t length)
 
-class SerialProcessor {
+
+
+class SerialProcessor : public Print {
     public:
         void setup();
         void loop(int test);
-        void writeBytes(const byte *payload, uint8_t length);
-        void writeString(const char *payload);
         void registerProcessedCallback(PROCESSED_CALLBACK_FUNCTION(func,,));
+        virtual size_t write(uint8_t);
+        virtual size_t write(const uint8_t *buffer, size_t size);
 
 
     private:

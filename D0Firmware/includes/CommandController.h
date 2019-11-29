@@ -15,6 +15,10 @@
 class CommandController {
     public:
         command_state_t commandState;
+        Settings *settingsPtr;
+        IMU *imuPtr;
+        BatteryMonitor *batteryMonitorPtr;
+        SerialProcessor *serialProcessorPtr;
         
         void setup(SerialProcessor &serialProcessor, Settings &settings, IMU &imu, BatteryMonitor &batteryMonitor);
         void loop(int test);
@@ -22,10 +26,7 @@ class CommandController {
         void processCommand(command_t &command);
 
     private:
-        Settings *settingsPtr;
-        IMU *imuPtr;
-        BatteryMonitor *batteryMonitorPtr;
-        SerialProcessor *serialProcessorPtr;
+        
         command_t commandBuffer[8];
         uint8_t commandBufferCount;
         uint8_t commandBufferWriteIndex;
