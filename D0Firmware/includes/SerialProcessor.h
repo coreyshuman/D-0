@@ -4,8 +4,8 @@
 #ifndef __SERIALPROCESSOR_H
 #define __SERIALPROCESSOR_H
 
-#define BUFFER_LENGTH_TX        64
-#define BUFFER_LENGTH_RX        64
+#define BUFFER_LENGTH_TX        128
+#define BUFFER_LENGTH_RX        128
 #define BUFFER_LENGTH_PARSED    64
 
 #define PROCESSED_CALLBACK_FUNCTION(func, payload, length)  void (*func)(char * payload, uint8_t length)

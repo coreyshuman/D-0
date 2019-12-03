@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "../includes/CommandController.h"
 #include "../includes/Settings.h"
+#include "../includes/Util.h"
 
 const char TAB = ("\t");
 const char NEWLINE = ("\n");
@@ -121,14 +122,32 @@ void cResponseCommandNotFound(CommandController &controller) {
     controller.serialProcessorPtr->println(F("CNF"));
 }
 
-void cRuntimeFreeAnimation(CommandController &controller, command_table_t &cTable, command_t &command, Params &params) {
-    //controller.commandState.flags.
+void cResponseCommandOutOfRange(CommandController &controller) {
+    controller.serialProcessorPtr->println(F("OOR"));
 }
-
 
 /*********************************************************************
  * Command Handler Callbacks
  ********************************************************************/
+/*******************
+ * cRuntimeTelemetry
+ * 
+ * Payload format: ALY, ALX, ARY, ARX, none,btn1,btn2,stat 
+ *        Example: 7F9F,80DF,7F5F,801F,0000,0000,0000,0000
+ * 
+ * ******************/
+void cRuntimeTelemetry(CommandController &controller, command_table_t &cTable, command_t &command, Params &params) {
+    controller.commandState.driveSpeed = ((int16_t)(Util::htoi(params[0].dataPtr) - 0x8000)) >> 4;
+    controller.commandState.turnSpeed = ((int16_t)(Util::htoi(params[1].dataPtr) - 0x8000)) >> 4;
+    controller.commandState.flags.map = Util::htoi(params[7].dataPtr);
+    controller.commandState.lastUpdateTick = millis();
+    controller.commandState.valid = true;
+    cResponseOK(controller);
+    Serial.println("TEL ");
+    Serial.print("flag ");Serial.print(controller.commandState.flags.map, HEX);Serial.print(" arm ");Serial.print(controller.commandState.flags.armed);
+}
+
+
 void cRuntimeArm(CommandController &controller, command_table_t &cTable, command_t &command, Params &params) {
     controller.commandState.flags.armed = true;
     cResponseOK(controller);
@@ -163,8 +182,30 @@ void cSettingsFreeAnimation(CommandController &controller, command_table_t &cTab
 
 }
 
+/*******************
+ * cRuntimeTelemetry
+ * 
+ * Payload format: servoNum, minimum, center, maxiumum, deadband
+ *        Example: 0, 150, 375, 600, 50
+ * 
+ * servoNum:
+ *      0. leftDriveServoCal
+ *      1. rightDriveServoCal;
+ *      2. neckAngleServoCal;
+ *      3. neckLeanServoCal;
+ *      4. headTurnServoCal;
+ *      5. headTiltServoCal;
+ * ******************/
 void cSettingsServoCalibration(CommandController &controller, command_table_t &cTable, command_t &command, Params &params) {
+    _servo_calibration_t *servoCalibrationPtr = &controller.settingsPtr->config.leftDriveServoCal;
+    uint8_t servoNum = Util::atoi(params[0].dataPtr);
+    if(servoNum > 5) return (void)cResponseCommandOutOfRange(controller);
 
+    servoCalibrationPtr += servoNum;
+    servoCalibrationPtr->minimum = Util::atoi(params[1].dataPtr);
+    servoCalibrationPtr->center = Util::atoi(params[2].dataPtr);
+    servoCalibrationPtr->maximum = Util::atoi(params[3].dataPtr);
+    servoCalibrationPtr->deadband = Util::atoi(params[4].dataPtr);
 }
 
 void cSettingsPrint(CommandController &controller, command_table_t &cTable, command_t &command, Params &params) {
@@ -182,10 +223,10 @@ void cSettingsSave(CommandController &controller, command_table_t &cTable, comma
     cResponseOK(controller);
 }
 
-const command_table_t commandTable[] = {
+const command_table_t commandTable[COMMAND_TABLE_COUNT] = {
     // runtime
-    {"rf", 0, 0, cRuntimeFreeAnimation},
     {"rr", 0, 0, cRuntimeArm},
+    {"rt", 8, 8, cRuntimeTelemetry},
     
     {"tt", 1, 3, testtest},
     // imu
@@ -193,14 +234,18 @@ const command_table_t commandTable[] = {
     {"ip", 0, 0, cImuPrint},
     // settings
     {"sf", 0, 0, cSettingsFreeAnimation},
-    {"sc", 0, 0, cSettingsServoCalibration},
+    {"sc", 5, 5, cSettingsServoCalibration},
     {"sp", 0, 0, cSettingsPrint},
     {"sr", 1, 3, cSettingsReset},
     {"ss", 1, 3, cSettingsSave}
 };
 
 
-
+void CommandController::initCommandState() {
+    commandState.driveSpeed = COMMAND_RANGE_MID;
+    commandState.turnSpeed = COMMAND_RANGE_MID;
+    commandState.valid = false;
+}
 
 void CommandController::setup(SerialProcessor &serialProcessor, Settings &settings, IMU &imu, BatteryMonitor &batteryMonitor) {
     settingsPtr = &settings;
@@ -208,8 +253,7 @@ void CommandController::setup(SerialProcessor &serialProcessor, Settings &settin
     batteryMonitorPtr = &batteryMonitor;
     serialProcessorPtr = &serialProcessor;
 
-    commandState.driveSpeed = COMMAND_RANGE_MID;
-    commandState.turnSpeed = COMMAND_RANGE_MID;
+    initCommandState();
 
     commandBufferReadIndex = commandBufferWriteIndex = commandBufferCount = 0;
 }
@@ -270,53 +314,8 @@ void CommandController::loop(int test) {
         }
         commandBufferCount--;
     }
-    /*
-    if (Serial.available() > 0) {
-        // read the incoming byte:
-        char c = Serial.read();
 
-        switch(c) {
-            case 'a':
-                commandState.flags.armed = !commandState.flags.armed;
-                Serial.println(commandState.flags.armed ? F("Armed") : F("Not Armed"));
-                break;
-            case 'b': 
-                settingsPtr->config.leftDriveServoCal.minimum = Serial.read() - 0x30;
-                break;
-
-            case 'i':
-                Serial.print("ypr\t");
-                Serial.print(imuPtr->imuData.ypr.x * 180/M_PI);
-                Serial.print("\t");
-                Serial.print(imuPtr->imuData.ypr.y * 180/M_PI);
-                Serial.print("\t");
-                Serial.println(imuPtr->imuData.ypr.z * 180/M_PI);
-                break;
-            case 's': 
-                settingsPtr->save();
-                break; 
-            case 'd':
-                settingsPtr->reset();   
-            case 'c': 
-                Serial.println("Calibrating...");
-                settingsPtr->config.imuOffsets = imuPtr->calibrate(); 
-                settingsPtr->save();
-                Serial.println("Done.");
-                break;
-            case 'p': settingsPtr->printConfig(); break;
-            case 'w':
-                serialProcessorPtr->writeString("This is a test string.");
-                break;
-            case 'v':
-                Serial.print("Bus Voltage:   "); Serial.print(batteryMonitorPtr->busVoltage); Serial.println(" V");
-                Serial.print("Shunt Voltage: "); Serial.print(batteryMonitorPtr->shuntVoltage); Serial.println(" mV");
-                Serial.print("Load Voltage:  "); Serial.print(batteryMonitorPtr->loadVoltage); Serial.println(" V");
-                Serial.print("Current:       "); Serial.print(batteryMonitorPtr->current); Serial.println(" mA");
-                Serial.print("Power:         "); Serial.print(batteryMonitorPtr->power); Serial.println(" mW");
-                Serial.println("");
-                break;
-        }
-        
+    if(commandState.valid && millis() - commandState.lastUpdateTick > TELEMETRY_TIMEOUT) {
+        initCommandState();
     }
-    */
 }

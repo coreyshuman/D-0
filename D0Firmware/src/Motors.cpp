@@ -34,26 +34,31 @@ void Motors::loop(command_state_t &commandState, imu_data_t &imuData, config_t &
                 commandVal = COMMAND_RANGE_MID;
         } 
         commandVal += stabilizationSpeed;
-        pwmVal = map(commandVal, COMMAND_RANGE_MIN, COMMAND_RANGE_MAX, 
-            config.leftDriveServoCal.minimum, config.leftDriveServoCal.maximum);
+        if(commandVal <= COMMAND_RANGE_MID) {
+            pwmVal = map(commandVal, COMMAND_RANGE_MIN, COMMAND_RANGE_MID, 
+                config.leftDriveServoCal.minimum, config.leftDriveServoCal.center);
+        } else {
+            pwmVal = map(commandVal, COMMAND_RANGE_MID, COMMAND_RANGE_MAX, 
+                config.leftDriveServoCal.center, config.leftDriveServoCal.maximum);
+        }
         pwm.setPWM(DRIVE_MOTOR_LEFT, 0, pwmVal);
-        Serial.print("Drive ");
-        Serial.print(commandVal);
-        Serial.print(" PWM ");
-        Serial.print(pwmVal);
-        Serial.print("\n");
         
 
         // right drive motor
         commandVal = commandState.driveSpeed + turnSpeedFactor;
-        if(commandVal > COMMAND_RANGE_MID - config.leftDriveServoCal.deadband &&
-            commandVal < COMMAND_RANGE_MID + config.leftDriveServoCal.deadband) {
-                pwm.setPin(DRIVE_MOTOR_RIGHT, 0);
+        if(commandVal > COMMAND_RANGE_MID - config.rightDriveServoCal.deadband &&
+            commandVal < COMMAND_RANGE_MID + config.rightDriveServoCal.deadband) {
+                commandVal = COMMAND_RANGE_MID;
+        } 
+        commandVal += stabilizationSpeed;
+        if(commandVal <= COMMAND_RANGE_MID) {
+            pwmVal = map(commandVal, COMMAND_RANGE_MIN, COMMAND_RANGE_MID, 
+                config.rightDriveServoCal.minimum, config.rightDriveServoCal.center);
         } else {
-            pwmVal = map(commandVal, COMMAND_RANGE_MIN, COMMAND_RANGE_MAX, 
-                config.leftDriveServoCal.minimum, config.leftDriveServoCal.maximum);
-            pwm.setPWM(DRIVE_MOTOR_RIGHT, 0, pwmVal);
+            pwmVal = map(commandVal, COMMAND_RANGE_MID, COMMAND_RANGE_MAX, 
+                config.rightDriveServoCal.center, config.rightDriveServoCal.maximum);
         }
+        pwm.setPWM(DRIVE_MOTOR_RIGHT, 0, pwmVal);
 
 
 
@@ -61,7 +66,5 @@ void Motors::loop(command_state_t &commandState, imu_data_t &imuData, config_t &
         for(i=0; i<15; i++) {
             pwm.setPin(i, 0);
         }
-        
-        
     }
 }

@@ -56,6 +56,78 @@ void Util::printHex(uint8_t val) {
 }
 
 /********************************************************************
+* Function: 	itoh()
+*
+* Precondition: 
+*
+* Input: 		Unsigned 16 bit integer, char* with at least 4 byte of memory
+*
+* Output:		4-byte hexidecimal string
+*
+* Side Effects:	None.
+*
+* Overview:     Calculates the hexidecimal string representation of an
+*               unsigned integer and saves to memory location pointed to
+*               by returnStringDestination
+*
+*			
+* Note:		 	Return string is most-significant digit first.
+********************************************************************/	
+void Util::itoh(uint16_t val, char* returnStringDestination)
+{
+    int i;
+    for(i = 0; i < 4; i++) {
+        uint8_t tempNibble = (val >> (12 - 4*i)) & 0x0F;
+        if(tempNibble < 10) {
+            returnStringDestination[i] = (char)('0' + tempNibble);
+        } else {
+            returnStringDestination[i] = (char)('A' + tempNibble - 10);
+        }
+    }
+}
+
+/********************************************************************
+* Function: 	htoi()
+*
+* Precondition: 
+*
+* Input: 		String containing hexidecimal characters. 
+*
+* Output:		16-bit unsigned integer.
+*
+* Side Effects:	None.
+*
+* Overview:     Calculates the numeric value of a multicharacter hexidecimal
+*               string representation. String can be up to 4 characters long.
+*
+*			
+* Note:		 	Hexidecimal string is most-significant digit first.
+********************************************************************/	
+uint16_t Util::htoi(const char *str)
+{
+    uint16_t val = 0;
+    int idx = 0;
+
+    while(str[idx] != 0 && idx < 4) {
+        char c = str[idx];
+        val <<= idx > 0 ? 4 : 0;
+        if(c <= '9' && c >= '0') {
+            val += ((c - '0') & 0x0F);
+        } else if(c <= 'f' && c >= 'a') {
+            val += 10 + ((c - 'a') & 0x0F);
+        } else if(c <= 'F' && c >= 'A') {
+            val += 10 + ((c - 'A') & 0x0F);
+        } else {
+            // invalid character
+            return 0;
+        }
+        idx++;
+    }
+
+    return val;
+}
+
+/********************************************************************
 * Function: 	atoi()
 *
 * Precondition: 

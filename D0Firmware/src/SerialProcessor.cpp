@@ -9,6 +9,10 @@ void SerialProcessor::loop(int test) {
     // quickly retrieve from Serial buffer
     // frees it up to receive more data
     while(Serial.available()) {
+        if(rxCount >= BUFFER_LENGTH_RX) {
+            Serial.println("RX OVERFLOW");
+            break;
+        }
         rxBuffer[rxWriteIndex++] = Serial.read();
         if(rxWriteIndex >= BUFFER_LENGTH_RX) {
             rxWriteIndex = 0;
@@ -16,10 +20,7 @@ void SerialProcessor::loop(int test) {
         rxCount++;
     }
 
-    if(rxCount > BUFFER_LENGTH_RX) {
-        rxCount = BUFFER_LENGTH_RX;
-        Serial.println("RX OVERFLOW");
-    }
+    
 
     // send data from transmit buffer
     while(txCount > 0) {
@@ -42,21 +43,22 @@ void SerialProcessor::loop(int test) {
 }
 
 size_t SerialProcessor::write(uint8_t data) {
+    if(txCount >= BUFFER_LENGTH_TX) {
+        Serial.println("TX OVERFLOW");
+        return 0;
+    }
     txBuffer[txWriteIndex++] = data;
     if(txWriteIndex >= BUFFER_LENGTH_TX) {
         txWriteIndex = 0;
     }
+    txCount++;
+    
+    return 1;
 }
 
 size_t SerialProcessor::write(const uint8_t *payload, size_t length) {
     while(length --) {
-        write(*payload++);
-        txCount++;
-    }
-
-    if(txCount > BUFFER_LENGTH_TX) {
-        txCount = BUFFER_LENGTH_TX;
-        Serial.println("TX OVERFLOW");
+        if(write(*payload++) == 0) break;
     }
 }
 /*
@@ -106,7 +108,7 @@ void SerialProcessor::parseReceived(char data) {
                 if(processedCallback != nullptr) {
                     processedCallback(parseBuffer, parseCount);
                 }
-                Serial.println("Verified");
+                Serial.println("RxCmd");
             } else {
                 Serial.println("INVALID");
             }

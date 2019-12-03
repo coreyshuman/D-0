@@ -52,3 +52,42 @@ TEST_CASE( "Test string float parsing", "[Util]" ) {
     REQUIRE( Util::atof((const char*)"-1.a1") == 0.0f );
     REQUIRE( Util::atof((const char*)"1.a1") == 0.0f );
 }
+
+TEST_CASE( "Test int to hex string conversion", "[Util]" ) {
+    char tmp[4];
+
+    Util::itoh(1, tmp);
+    REQUIRE( strncmp(tmp, "0001", 4) == 0 );
+    Util::itoh(0, tmp);
+    REQUIRE( strncmp(tmp, "0000", 4) == 0 );
+    Util::itoh(15, tmp);
+    REQUIRE( strncmp(tmp, "000F", 4) == 0 );
+    Util::itoh(250, tmp);
+    REQUIRE( strncmp(tmp, "00FA", 4) == 0 );
+    Util::itoh(4012, tmp);
+    REQUIRE( strncmp(tmp, "0FAC", 4) == 0 );
+    Util::itoh(64206, tmp);
+    REQUIRE( strncmp(tmp, "FACE", 4) == 0 );
+    Util::itoh(4660, tmp);
+    REQUIRE( strncmp(tmp, "1234", 4) == 0 );
+    Util::itoh(23130, tmp);
+    REQUIRE( strncmp(tmp, "5A5A", 4) == 0 );
+}
+
+TEST_CASE( "Test hex string to int conversion", "[Util]" ) {
+    REQUIRE( Util::htoi((const char*)"1") == 1 );
+    REQUIRE( Util::htoi((const char*)"0") == 0 );
+    REQUIRE( Util::htoi((const char*)"a") == 10 );
+    REQUIRE( Util::htoi((const char*)"F") == 15 );
+    REQUIRE( Util::htoi((const char*)"FA") == 250 );
+    REQUIRE( Util::htoi((const char*)"FAC") == 4012 );
+    REQUIRE( Util::htoi((const char*)"FACE") == 64206 );
+    REQUIRE( Util::htoi((const char*)"face") == 64206 );
+    REQUIRE( Util::htoi((const char*)"1234") == 4660 );
+    REQUIRE( Util::htoi((const char*)"5A5A") == 23130 );
+}
+
+TEST_CASE( "Test uint to int offset calculation", "[runtime]" ) {
+    REQUIRE( (int16_t)((uint16_t)0x1234 - (uint16_t)0x8000) == -28108);
+    REQUIRE( (int16_t)((uint16_t)0xF000 - (uint16_t)0x8000) == 0x7000);
+}

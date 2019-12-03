@@ -8,7 +8,8 @@
 #include "CommandData.h"
 #include "SerialProcessor.h"
 
-#define COMMAND_TABLE_COUNT 5
+#define COMMAND_TABLE_COUNT 10
+#define TELEMETRY_TIMEOUT   500     // milliseconds
 
 
 
@@ -31,6 +32,8 @@ class CommandController {
         uint8_t commandBufferCount;
         uint8_t commandBufferWriteIndex;
         uint8_t commandBufferReadIndex;
+
+        void initCommandState();
 /*
         static void commandArm() {
             Serial.println("Command Arm");
